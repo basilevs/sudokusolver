@@ -1,6 +1,6 @@
 package sudokusolver;
 import scala.collection.Set;
-import scala.collection.mutable.ArrayBuffer;
+import scala.collection.mutable;
 
 trait Solution {
 	def excludeValue(x: Int, y:Int, value: Int): Solution
@@ -40,24 +40,26 @@ object Solver {
 		def onChange(iSolution: Solution, cell:Cell): Solution
 	}
 	object Listener {
-		class Collection extends ArrayBufer[Listener] with Listener {
+		class Collection extends mutable.ArrayBuffer[Listener] with Listener {
 			def onChange(iSolution: Solution, cell:Cell):Solution = {
-				var curSolution = iSolution
+				var rv = iSolution
 				var changed = false
 				for (i <- this) {
 					assert(cell != null)
-					assert(curSolution != null)
+					assert(rv != null)
 					assert(i != null)
-					val newSolution = i.onChange(curSolution, cell)
+					val newSolution = i.onChange(rv, cell)
 					if (newSolution != null) {
-						curSolution = newSolution
+						rv = newSolution
 						changed = true
 					} 
 				}
 				if (changed)
-					return curSolution
-				else 
+					return rv
+				else {
+					print("No change from listeners for %s\n".format(cell));
 					return null
+				}
 			}
 		}
 	}

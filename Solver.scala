@@ -13,20 +13,25 @@ class SquareSolver extends Solver {
 		}
 		return false
 	}
-	class SquareCell(x: Int, y: Int) extends Cell {
-		def groups = Set(verticalGroups(x), horizontalGroups(y), blockGroups(y/blockSize * width/blockSize + x/blockSize))
+	case class SquareCell(x: Int, y: Int) extends Cell {
+		def groups = Set[Group](verticalGroups(x), horizontalGroups(y), blockGroups(y/blockSize * width/blockSize + x/blockSize))
 		def possibleValues(iSolution: Solution): Set[Int] = iSolution.possibleValues(x, y);
 		def excludeValue(iSolution: Solution, value: Int):Solution  = {
 			val values = possibleValues(iSolution)
+//			print("%d, %d values are ".format(x, y)+values+"\n")
 			if (!values.contains(value))
 				return null // Already excluded
 			if (values.size == 1)
-				throw new RuntimeException("Unable to exclude %d for cell(%d, %d) as it is the only possible value left".format(value, x, y))
+				throw new RuntimeException("Unable to exclude %d for %s, possible values: %s".format(value, this.toString, values.toString))
+//			print("Before exclusion:\n" + iSolution)
 			val curSolution = iSolution.excludeValue(x, y, value)
+//			print("After exclusion:\n" + curSolution)
 			assert(curSolution != null)
 			for (group <- groups)
 				if (!groupContainsValue(curSolution, group, value))
-					return null
+					throw new RuntimeException("No %d left in %s".format(value, group.toString))
+			print("Successfully excluded %d from %s\n".format(value, this))
+//			print(curSolution)
 			val nextSolution = listeners.onChange(curSolution, this)
 			if (nextSolution != null)
 				nextSolution
@@ -65,15 +70,19 @@ class SquareSolver extends Solver {
 		def apply(n:Int) = {
 			val subRow = n/blockSize
 			val subColumn = n - subRow*blockSize
-			allCells(width*(y+subRow)+x+subColumn)
+			val cellY = y*blockSize+subRow
+			val cellX = x*blockSize+subColumn
+			allCells(width*cellY+cellX)
 		}
 	}
-	val allCells = for (y <- 0 until height; x <- 0 until width) yield new SquareCell(x, y)
-	val verticalGroups = for (x <- 0 until width) yield new VerticalGroup(x);
-	val horizontalGroups = for (y <- 0 until height) yield new HorizontalGroup(y);
-	val blockGroups = for {	y <- 0 until height/blockSize
-							x <- 0 until width/blockSize
-						}							yield new BlockGroup(x, y);
+	val allCells:Array[Cell] = {for (y <- 0 until height; x <- 0 until width) yield {new SquareCell(x, y)}}.toArray
+	val verticalGroups:Array[Group] = {for (x <- 0 until width) yield new VerticalGroup(x)}.toArray;
+	val horizontalGroups:Array[Group] = {for (y <- 0 until height) yield new HorizontalGroup(y)}.toArray;
+	val blockGroups:Array[Group] = {
+		for {	y <- 0 until height/blockSize
+				x <- 0 until width/blockSize
+		} yield new BlockGroup(x, y);
+	}.toArray
 	def cells = allCells
 	def groups = for {	col <- Seq(horizontalGroups, verticalGroups, blockGroups)
 						group <- col
@@ -84,6 +93,8 @@ class SquareSolver extends Solver {
 		for (cell <- allCells) {
 			val temp = listeners.onChange(rv, cell)
 			if (temp!=null) {
+				print("SquareSolver result for %s:\n".format(cell))
+				print(temp)
 				rv =temp
 				changed = true
 			}

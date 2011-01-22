@@ -1,20 +1,21 @@
 package sudokusolver;
 import scala.collection.Set;
-import scala.collection.mutable.BitSet;
+import scala.collection.BitSet;
 
 class SquareSolution (field: Seq[BitSet]) extends Solution {
 	import SquareSolution._
 //	def this() = this(fillMapWith(initialBitSet))
 	def valuesInPosition(x:Int , y:Int) = field(width*y + x)
 	override def toString = {
+		def formatSet(set:Set[Int]): String = set.map(_.toString).mkString("(", ",", ")")
 		for (y <- 0 until height) yield {
-			field.slice(width*y, width*y+width).mkString(", ")
+			field.slice(width*y, width*y+width).map(formatSet).mkString(", ")
 		}
-	}.mkString("\n")
+	}.mkString("", "\n", "\n")
 			
-	def setValuesInPosition(x:Int , y:Int, values: Set[Int]) = {
+	def setValuesInPosition(x:Int , y:Int, values: BitSet) = {
 		val position = width*y + x
-		val array = field.toArray
+		val array:Array[BitSet] = field.toArray
 		array.update(position, values)
 		new SquareSolution(array)
 	}
@@ -24,7 +25,12 @@ class SquareSolution (field: Seq[BitSet]) extends Solution {
 		if (! oldValues.contains(value)) {
 			this
 		} else {
-			setValuesInPosition(x, y, oldValues - value)
+			val newValues = new scala.collection.mutable.BitSet(9)
+			for (i <- oldValues) {
+				if (i != value)
+					newValues+=i
+			}
+			setValuesInPosition(x, y, newValues)
 		}
 	}
 	def setValue(x: Int, y:Int, value: Int) = {
@@ -33,7 +39,9 @@ class SquareSolution (field: Seq[BitSet]) extends Solution {
 		if (oldValues.contains(value) && oldValues.size==1) {
 			this
 		} else {
-			setValuesInPosition(x, y, oldValues+value)
+			val newValues = new scala.collection.mutable.BitSet(9)
+			newValues+=value
+			setValuesInPosition(x, y, newValues)
 		}
 	}
 	def possibleValues(x:Int , y:Int) = field(width*y + x)
@@ -48,7 +56,7 @@ object SquareSolution {
 		temp
 	}
 	def valueToBitSet(value: Int): BitSet = setToBitSet(Set(value))
-	val initialBitSet = new BitSet(9)
+	val initialBitSet = new scala.collection.mutable.BitSet(9)
 	for (i <- 1 until 10) {initialBitSet+=i}
 	def fillMapWith(s:Set[Int]) = {
 		for (i <- 0 until width*height) yield s
@@ -60,7 +68,7 @@ object SquareSolution {
 			if (value >= 1)
 				valueToBitSet(value)
 			else 
-				initialBitSet
+				initialBitSet.toImmutable
 		}
 	}	
 };
