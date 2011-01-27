@@ -6,14 +6,13 @@ trait Solution {
 	def excludeValue(x: Int, y:Int, value: Int): Solution
 	def setValue(x: Int, y:Int, value: Int): Solution
 	def possibleValues(x: Int, y:Int): Set[Int]
-};
+}
+
 
 /** Represents a set of rules and propagates notifications of solution change.
 */
 trait Solver {
 	import Solver._
-	def groups: Seq[Group]
-	def cells: Seq[Cell]
 	var listeners = new Listener.Collection
 	/**	Futher changes solution on one cell modification.
 		All algorithms and heuristics are to implement this.
@@ -21,6 +20,7 @@ trait Solver {
 	*/
 	def start(iSolution: Solution): Solution
 }
+
 
 object Solver {
 	trait Group extends Seq[Cell] {}
