@@ -13,24 +13,27 @@ trait Solution {
 */
 trait Solver {
 	import Solver._
+	type SolverSolution <: Solution
 	var listeners = new Listener.Collection
 	/**	Futher changes solution on one cell modification.
 		All algorithms and heuristics are to implement this.
 		Initially all algorithms are notified about change of cells set.
 	*/
-	def start(iSolution: Solution): Solution
+	def start(iSolution: SolverSolution): SolverSolution
 }
-
 
 object Solver {
 	trait Group extends Seq[Cell] {}
 	trait Cell {
+		type SolverSolution <: Solution
 		def groups: Set[Group]
-		def possibleValues(iSolution: Solution): Set[Int]
-		def excludeValue(iSolution: Solution, value: Int): Solution
-		def setValue(iSolution: Solution, value: Int): Solution
+		def possibleValues(iSolution: SolverSolution): Set[Int]
+		def excludeValue(iSolution: SolverSolution, value: Int): SolverSolution
+		def setValue(iSolution: SolverSolution, value: Int): SolverSolution
 	}
 	trait Listener {
+		type SolverSolution <: Solution
+		val solver:Solver
 		/**	Is called on cell change
 			Algorithms may change cell's neighbours from within this callback.
 			All algotrithms will be notified of that change too.
@@ -41,7 +44,7 @@ object Solver {
 	}
 	object Listener {
 		class Collection extends mutable.ArrayBuffer[Listener] with Listener {
-			def onChange(iSolution: Solution, cell:Cell):Solution = {
+			def onChange(iSolution: SolverSolution, cell:Cell):Solution = {
 				var rv = iSolution
 				var changed = false
 				for (i <- this) {

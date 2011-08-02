@@ -2,7 +2,8 @@ package sudokusolver;
 
 class KnownRemover extends sudokusolver.Solver.Listener {
 	import Solver._
-	def onChange(iSolution: Solution, cell:Cell): Solution = {
+	
+	def onChange(iSolution: SolverSolution, cell:Cell): Solution = {
 		var rv = iSolution
 		var changed = false
 		if (cell.possibleValues(rv).size == 1) {
